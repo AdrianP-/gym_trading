@@ -52,7 +52,7 @@ with U.make_session(8):
     csv = "/home/adrian/Escritorio/polinex/EURUSD60.csv"
 
     env = gym.make('trading-v0')
-    env.initialise_simulator(csv, ATR=True, trade_period=5, train_split=0.7)
+    env.initialise_simulator(csv, ATR=True, trade_period=5000, train_split=0.7)
 
     act, train, update_target, debug = deepq.build_train(
         make_obs_ph=lambda name: U.BatchInput(env.observation_space.shape, name=name),
@@ -110,16 +110,18 @@ with U.make_session(8):
                 print("--")
                 print("mean episode reward       | {:}".format(round(np.mean(episode_rewards[-101:-1]), 1)))
                 print("Total operations          | {}".format(len(env.portfolio.journal)))
+                print("Avg duration              | {}".format(round(journal["Trade Duration"].mean(),2) ))
                 print("Total profit              | {}".format(round(profit), 1))
                 print("Avg profit per trade      | {}".format(round(env.portfolio.average_profit_per_trade,3)))
 
                 print("--")
+
                 reward_test, profit = run_test(env=env, act=act)
                 print("Total profit train:       > {}".format(round(profit,2)))
                 print("Avg profit per trade train> {}".format(round(reward_test,3)))
                 print("-------------------------------------")
             except Exception as e:
-                print("not profit", e)
+                print("Exception: ", e)
             obs = env.reset()
 
             episode_rewards.append(0)

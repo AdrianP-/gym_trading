@@ -63,7 +63,7 @@ class Q(object):
             i = 0
             while done is False:
                 i += 1
-                if self.env.portfolio.holding_trade:
+                if self.env.portfolio._holding_trade:
                     # if we are still holding
                     action = 2
                 else:
