@@ -32,7 +32,6 @@ def run_test(env, act, episodes=1, final_test=False):
     for episode in range(episodes):
         done = False
         while done is False:
-
             action = act(obs[None])
             obs, reward, done, info = env.step(action)
 
@@ -54,7 +53,7 @@ with U.make_session(8):
 
     env = gym.make('trading-v0')
     env.initialise_simulator(csv, ATR=True, trade_period=5, train_split=0.7)
-    print(env.sim.states)
+
     act, train, update_target, debug = deepq.build_train(
         make_obs_ph=lambda name: U.BatchInput(env.observation_space.shape, name=name),
         q_func=model,
@@ -82,19 +81,18 @@ with U.make_session(8):
         # print("obs: ", obs, "new_obs", new_obs)
 
         obs = new_obs
-        # print(rew)
 
         # print("action: ", action, "rew: ", rew, "episode_rewards: ", episode_rewards[-1])
         # print(episode_rewards)
         # print(env.portfolio.total_reward)
+        episode_rewards[-1] += rew
+
         if env.portfolio.journal:
             journal = pd.DataFrame(env.portfolio.journal)
             profit = journal["Profit"].sum()
-            episode_rewards[-1] += profit + rew
             # print(episode_rewards[-1])
             is_solved = profit > 1000 or t == 100000
         else:
-            episode_rewards[-1] += rew
             profit = None
             is_solved = False
 
