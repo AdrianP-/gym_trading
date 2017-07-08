@@ -62,7 +62,7 @@ class Q(object):
             actions = []
             i = 0
             while done is False:
-                i+=1
+                i += 1
                 if self.env.portfolio.holding_trade:
                     # if we are still holding
                     action = 2
@@ -86,7 +86,7 @@ class Q(object):
 
                 # Perform update on self.lookup_table only in train_mode
                 self.lookup_table[state, action] = (1. - self.lr) * self.lookup_table[state, action] + self.lr * (
-                reward + self.y * max(self.lookup_table[next_state, :]))
+                    reward + self.y * max(self.lookup_table[next_state, :]))
                 actions.append(action)
                 state = next_state
 
@@ -94,8 +94,8 @@ class Q(object):
                 start = self.env.sim.train_end_index + 1
                 end = self.env.sim.count - 1
                 print("End of Test Period from %s to %s, Average Reward is %s" % (
-                self.env.sim.date_time[start], self.env.sim.date_time[end],
-                self.env.portfolio.average_profit_per_trade))
+                    self.env.sim.date_time[start], self.env.sim.date_time[end],
+                    self.env.portfolio.average_profit_per_trade))
             else:
                 print(i)
                 print("End of Episode %s, Reward is %s" % (episode + 1, self.env.portfolio.average_profit_per_trade))

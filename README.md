@@ -1,4 +1,4 @@
-# OpenAI Gym for Trading With OpenAI Baseline
+# OpenAI Gym for Trading With OpenAI  Baseline
 An example of Reinforcement Trading using OpenAI Baseline
 
 Requirements:

@@ -178,9 +178,9 @@ class Simulator(object):
         self.train_end_index = int(train_split * self.count)
 
         # Attributes related to the observation state: Return
-        self.states = self.data.drop(['Open', 'Close', 'High', 'Low', 'Volume'], axis=1).values
-        self.min_values = df.drop(['Open', 'Close', 'High', 'Low', 'Volume'], axis=1).min(axis=0).values
-        self.max_values = df.drop(['Open', 'Close', 'High', 'Low', 'Volume'], axis=1).max(axis=0).values
+        self.states = self.data.drop(['Open', 'Close', 'High', 'Low'], axis=1).values
+        self.min_values = df.drop(['Open', 'Close', 'High', 'Low'], axis=1).min(axis=0).values
+        self.max_values = df.drop(['Open', 'Close', 'High', 'Low'], axis=1).max(axis=0).values
 
         # Generate previous Close
         if dummy_period is not None:
@@ -208,12 +208,14 @@ class Simulator(object):
         return data
 
     def _reset(self, train=True):
-        obs = self.states[0]
+
         if train:
+            obs = self.states[0]
             self.current_index = 1
             self._end = self.train_end_index
         else:
             self.current_index = self.train_end_index + 1
+            obs = self.states[self.current_index]
             self._end = self.count - 1
 
         self._data = self.data.iloc[self.current_index:self._end + 1]

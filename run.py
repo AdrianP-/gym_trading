@@ -1,6 +1,7 @@
 import pandas as pd
-
+import gym_trading
 import gym
+import sys
 import itertools
 import numpy as np
 import tensorflow as tf
@@ -18,41 +19,33 @@ def model(inpt, num_actions, scope, reuse=False):
     """This model takes as input an observation and returns values of all actions."""
     with tf.variable_scope(scope, reuse=reuse):
         out = inpt
-        out = layers.fully_connected(out, num_outputs=64, activation_fn=tf.nn.tanh)
         out = layers.fully_connected(out, num_outputs=32, activation_fn=tf.nn.tanh)
         out = layers.fully_connected(out, num_outputs=num_actions, activation_fn=None)
         return out
 
 
-def run_test(env, act, obs, episodes=1):
-    env._reset(train=False)
-
-    start = 0
-    end = env.sim.train_end_index
-    print("Training period  %s - %s" % (env.sim.date_time[start], env.sim.date_time[end]))
+def run_test(env, act, episodes=1, final_test=False):
+    obs = env._reset(train=False)
+    start = env.sim.train_end_index + 1
+    end = env.sim.count - 1
 
     for episode in range(episodes):
-
-        start_index = env.sim.current_index
-
-        # Initialise state
-        start = env.sim.states[start_index - 1]
-        actions = []
         done = False
         while done is False:
-            action = act(obs[None])
 
+            action = act(obs[None])
             obs, reward, done, info = env.step(action)
 
-            actions.append(action)
+        if not final_test:
+            journal = pd.DataFrame(env.portfolio.journal)
+            profit = journal["Profit"].sum()
+            return env.portfolio.average_profit_per_trade, profit
+        else:
+            print("Training period  %s - %s" % (env.sim.date_time[start], env.sim.date_time[end]))
+            print("Average Reward is %s" % (env.portfolio.average_profit_per_trade))
 
-        start = env.sim.train_end_index + 1
-        end = env.sim.count - 1
-        print("End of Test Period from %s to %s, Average Reward is %s" % (
-            env.sim.date_time[start], env.sim.date_time[end],
-            env.portfolio.average_profit_per_trade))
-
-    env._generate_summary_stats()
+    if final_test:
+        env._generate_summary_stats()
 
 
 with U.make_session(8):
@@ -94,16 +87,14 @@ with U.make_session(8):
         # print("action: ", action, "rew: ", rew, "episode_rewards: ", episode_rewards[-1])
         # print(episode_rewards)
         # print(env.portfolio.total_reward)
-
-
-
         if env.portfolio.journal:
             journal = pd.DataFrame(env.portfolio.journal)
             profit = journal["Profit"].sum()
-            episode_rewards[-1] += profit
-            is_solved = profit > 1000 or t == 1000
+            episode_rewards[-1] += profit + rew
+            # print(episode_rewards[-1])
+            is_solved = profit > 1000 or t == 100000
         else:
-            episode_rewards[-1] += 0
+            episode_rewards[-1] += rew
             profit = None
             is_solved = False
 
@@ -112,19 +103,25 @@ with U.make_session(8):
             # print("new_obs", str(new_obs))
             # print("rew", rew)
             # print("action", action)
-            print("-------------------------------------")
-            print("steps                     | {:}".format(t))
-            print("episodes                  | {}".format(len(episode_rewards)))
-            print("% time spent exploring    | {}".format(int(100 * exploration.value(t))))
-            print("--")
-            print("mean episode reward       | {:}".format(round(np.mean(episode_rewards[-101:-1]), 1)))
-            if profit:
-                print("Profit all                | {}".format(round(profit), 1))
-            print("Total operations          | {}".format(len(env.portfolio.journal)))
-            print("--")
-            print("Reward in episode         | {}".format(env.portfolio.average_profit_per_trade))
-            print("-------------------------------------")
+            try:
+                print("-------------------------------------")
+                print("steps                     | {:}".format(t))
+                print("episodes                  | {}".format(len(episode_rewards)))
+                print("% time spent exploring    | {}".format(int(100 * exploration.value(t))))
 
+                print("--")
+                print("mean episode reward       | {:}".format(round(np.mean(episode_rewards[-101:-1]), 1)))
+                print("Total operations          | {}".format(len(env.portfolio.journal)))
+                print("Total profit              | {}".format(round(profit), 1))
+                print("Avg profit per trade      | {}".format(round(env.portfolio.average_profit_per_trade,3)))
+
+                print("--")
+                reward_test, profit = run_test(env=env, act=act)
+                print("Total profit train:       > {}".format(round(profit,2)))
+                print("Avg profit per trade train> {}".format(round(reward_test,3)))
+                print("-------------------------------------")
+            except Exception as e:
+                print("not profit", e)
             obs = env.reset()
 
             episode_rewards.append(0)
@@ -134,12 +131,12 @@ with U.make_session(8):
         if is_solved:
             # Show off the result
             env._generate_summary_stats()
-            run_test(env, act, obs)
+            run_test(env, act, final_test=True)
             exit(0)
 
         else:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
-            if t > 500:
+            if t > 1000:
                 obses_t, actions, rewards, obses_tp1, dones = replay_buffer.sample(32)
                 train(obses_t, actions, rewards, obses_tp1, dones, np.ones_like(rewards))
             # Update target network periodically.
