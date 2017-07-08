@@ -70,7 +70,7 @@ class Portfolio(object):
             self.curr_trade['Exit Price'] = curr_close_price
             self.curr_trade['Exit Time'] = curr_time
             self.curr_trade['Profit'] = -1 * (
-            curr_close_price - self.curr_trade['Entry Price']) * self.reward_normalizer - self.trading_cost
+                curr_close_price - self.curr_trade['Entry Price']) * self.reward_normalizer - self.trading_cost
 
             # Add the current trade to the journal
             self.journal.append(self.curr_trade)
@@ -153,7 +153,8 @@ class Portfolio(object):
 class Simulator(object):
     def __init__(self, csv, train_split, dummy_period=None, ATR=False, train=True):
         if "EUR" in csv:
-            df = pd.read_csv(csv, parse_dates=[[0,1]], header=None, names=['Date','Time', 'Open', 'High', 'Low', 'Close', 'Volume'])
+            df = pd.read_csv(csv, parse_dates=[[0, 1]], header=None,
+                             names=['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume'])
         else:
             df = pd.read_csv(csv, usecols=['Date', 'High', 'Low', 'Open', 'Close', 'Volume'])
         # Compute Returns based on consecutive closed prices
@@ -282,18 +283,18 @@ class TradingEnv(gym.Env):
         import pprint
         pp = pprint.PrettyPrinter(indent=2)
         pp.pprint(self.portfolio.journal)
-    #
-    #     print("hola render")
-    #     start = self.sim.train_end_index + 1
-    #     end = self.sim.count - 1
-    #     print("End of Test Period from %s to %s, Average Reward is %s" % (
-    #         self.sim.date_time[start], self.sim.date_time[end],
-    #         self.portfolio.average_profit_per_trade))
-    #
-    #     self.test()
-    #
-    # def test(self, episodes=100):
-    #     self._reset(train=False)
-    #     self.run_episodes(episodes, False)
+        #
+        #     print("hola render")
+        #     start = self.sim.train_end_index + 1
+        #     end = self.sim.count - 1
+        #     print("End of Test Period from %s to %s, Average Reward is %s" % (
+        #         self.sim.date_time[start], self.sim.date_time[end],
+        #         self.portfolio.average_profit_per_trade))
+        #
+        #     self.test()
+        #
+        # def test(self, episodes=100):
+        #     self._reset(train=False)
+        #     self.run_episodes(episodes, False)
 
-    # def _render(self):
+        # def _render(self):
