@@ -71,7 +71,7 @@ with U.make_session(8):
 
     episode_rewards = [0.0]
     obs = env.reset()
-
+    l_mean_episode_reward = []
     for t in itertools.count():
         # Take action and update exploration to the newest value
         action = act(obs[None], update_eps=exploration.value(t))[0]
@@ -85,19 +85,14 @@ with U.make_session(8):
 
         episode_rewards[-1] += rew
 
-        if env.portfolio.journal:
-            journal = pd.DataFrame(env.portfolio.journal)
-            profit = journal["Profit"].sum()
-            # print(episode_rewards[-1])
-            # is_solved = profit > 1000 or t == 100000
-            is_solved = np.mean(episode_rewards[-101:-1]) > 1000 or t == 5000
-        else:
-            profit = None
-            is_solved = False
-
-        print(episode_rewards)
+        is_solved = np.mean(episode_rewards[-101:-1]) > 500 or t >= 10000
+        is_solved = is_solved and len(env.portfolio.journal) != 0
 
         if done:
+
+            journal = pd.DataFrame(env.portfolio.journal)
+            profit = journal["Profit"].sum()
+
             try:
                 print("-------------------------------------")
                 print("steps                     | {:}".format(t))
@@ -105,10 +100,12 @@ with U.make_session(8):
                 print("% time spent exploring    | {}".format(int(100 * exploration.value(t))))
 
                 print("--")
-                print("mean episode reward       | {:}".format(round(np.mean(episode_rewards[-101:-1]), 1)))
+                l_mean_episode_reward.append(round(np.mean(episode_rewards[-101:-1]), 1))
+
+                print("mean episode reward       | {:}".format(l_mean_episode_reward[-1]))
                 print("Total operations          | {}".format(len(env.portfolio.journal)))
                 print("Avg duration trades       | {}".format(round(journal["Trade Duration"].mean(), 2)))
-                print("Total profit              | {}".format(round(profit), 1))
+                print("Total profit episode      | {}".format(round(profit), 1))
                 print("Avg profit per trade      | {}".format(round(env.portfolio.average_profit_per_trade, 3)))
 
                 print("--")
@@ -119,9 +116,12 @@ with U.make_session(8):
                 print("-------------------------------------")
             except Exception as e:
                 print("Exception: ", e)
-            obs = env.reset()
+                # Update target network periodically.
 
+            obs = env.reset()
             episode_rewards.append(0)
+
+
 
         if is_solved:
             # Show off the result
@@ -134,7 +134,7 @@ with U.make_session(8):
             if t > 500:
                 obses_t, actions, rewards, obses_tp1, dones = replay_buffer.sample(32)
                 train(obses_t, actions, rewards, obses_tp1, dones, np.ones_like(rewards))
-            # Update target network periodically.
             if t % 500 == 0:
                 update_target()
+
 

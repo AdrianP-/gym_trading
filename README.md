@@ -18,7 +18,7 @@ There are some improvements in code:
 
 ## Tutorial 
 
-
+https://github.com/AdrianP-/gym_trading/blob/master/Baseline%20DQN%20Gym_Trading%20Tutorial.ipynb
 
 ## References 
 OpenAI Baseline: https://github.com/openai/baselines
