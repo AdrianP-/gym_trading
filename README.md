@@ -1,7 +1,7 @@
 # OpenAI Gym for Trading With DQN OpenAI Baseline
 An example of Reinforcement Trading using OpenAI Baseline.
 
-This is made for Adrian Portabales based on Mr. Peter Henry and inspired by Tito Ingargiola, hackthemarket.
+This is made by Adrian Portabales based on Mr. Peter Henry and inspired by Tito Ingargiola, hackthemarket.
 
 There are some improvements in code:
 
